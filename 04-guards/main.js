@@ -36,8 +36,10 @@ const playerMachine = createMachine({
       on: {
         PAUSE: { target: 'paused' },
       },
-      // Add an eventless transition here that always goes to 'paused'
-      // when `elapsed` value is >= the `duration` value
+      always: {
+        cond: (ctx) => ctx.elapsed >= ctx.duration,
+        target: 'paused'
+      }
     },
   },
   on: {
@@ -55,14 +57,18 @@ const playerMachine = createMachine({
       actions: ['dislikeSong', raise('SKIP')],
     },
     'LIKE.TOGGLE': [
-      // Add two possible transitions here:
-      // One that raises UNLIKE if the `likeStatus` is 'liked',
-      // and one that raises LIKE if it's 'unliked'.
+      {
+        cond: (ctx) => ctx.likeStatus === 'liked',
+        actions: raise('UNLIKE')
+      },
+      {
+        cond: (ctx) => ctx.likeStatus === 'unliked',
+        actions: raise('LIKE')
+      }
     ],
     VOLUME: {
-      // Make sure the volume can only be assigned if the level is
-      // within range (between 0 and 10)
-      actions: 'assignVolume',
+        cond: 'volumeWithinRange',
+        actions: 'assignVolume',
     },
     'AUDIO.TIME': {
       actions: 'assignTime',
@@ -99,7 +105,7 @@ const playerMachine = createMachine({
     pauseAudio: () => {},
   },
   guards: {
-    // Add the guard implementations here, if you'd like
+    volumeWithinRange: (_,e) => { return e.volume >= 0 && e.volume <= 10}
   },
 });
 
