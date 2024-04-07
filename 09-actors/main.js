@@ -94,16 +94,21 @@ const playerMachine = createMachine({
       states: {
         loading: {
           tags: ['loading'],
-          // Instead of an external LOADED event,
-          // invoke a promise that returns the song.
-          // You can use the ready-made `loadSong` function.
-          // Add an `onDone` transition to assign the song data
-          // and transition to 'ready.hist'
+          id: 'loading',
+          invoke: {
+            id: 'songLoader',
+            src: loadSong,
+            onDone: {
+              actions: 'assignSongData',
+              target: 'ready.hist'
+            }
+          }
         },
         ready: {
-          // Invoke the audio callback (use `src: invokeAudio`)
-          // Make sure to give this invocation an ID of 'audio'
-          // so that it can receive events that this machine sends it
+          invoke: {
+            id: 'audio',
+            src: invokeAudio
+          },
           initial: 'paused',
           states: {
             paused: {
@@ -211,11 +216,8 @@ const playerMachine = createMachine({
     skipSong: () => {
       console.log('Skipping song');
     },
-    // These actions should send events to that invoked audio actor:
-    // playAudio should send 'PLAY'
-    // pauseAudio should send 'PAUSE'
-    playAudio: () => {},
-    pauseAudio: () => {},
+    playAudio: send({type: 'PLAY'}, {to: 'audio'}),
+    pauseAudio: send({type: 'PAUSE'}, {to: 'audio'}),
   },
   guards: {
     volumeWithinRange: (_, e) => {

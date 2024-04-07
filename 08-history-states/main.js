@@ -25,10 +25,7 @@ const playerMachine = createMachine({
           on: {
             LOADED: {
               actions: 'assignSongData',
-              // This will always go to the 'ready.playing' state
-              // Instead, go to the most recent child of the 'ready' state
-              // (Hint: target a history state!)
-              target: 'ready',
+              target: 'ready.hist',
             },
           },
         },
@@ -47,7 +44,9 @@ const playerMachine = createMachine({
                 PAUSE: { target: 'paused' },
               },
             },
-            // Add a sibling history state here
+            hist: {
+              type: 'history'
+            }
           },
           always: {
             cond: (ctx) => ctx.elapsed >= ctx.duration,
